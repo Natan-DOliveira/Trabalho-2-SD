@@ -1,4 +1,4 @@
-# Trabalho 1 Sistemas Digitais 2025/1
+# Trabalho 2 Sistemas Digitais 2025/1
 
 Esse é o projeto do trabalho
 
