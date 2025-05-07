@@ -128,6 +128,8 @@ module BullCow_Game (
                     end
                 end
 		    J1_GUESS: begin
+			bull_count <= 0;
+			cow_count <= 0;
 			numbers[0] <= 4'b0;
                     	numbers[1] <= 4'b0;
                     	numbers[2] <= 4'b0;
@@ -177,8 +179,8 @@ end
                 end
 
 		    J2_GUESS: begin
-			bull_count = 0;
-			cow_count = 0;
+			bull_count <= 0;
+			cow_count <= 0;
 			numbers[0] <= 4'b0;
                     	numbers[1] <= 4'b0;
                     	numbers[2] <= 4'b0;
