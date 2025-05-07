@@ -43,9 +43,9 @@ module game (
     state_t state;
 
 	//registradores
-	logic [3:0] numbers [3:0]; // números do J1
-	logic [3:0] magic_J1 [3:0]; // números do J2
-	logic [3:0] magic_J2 [3:0];
+	logic [3:0] numbers [3:0]; 
+	logic [3:0] magic_J1 [3:0]; // números do J1
+	logic [3:0] magic_J2 [3:0]; // números do J2
 	logic valid;
 
     // Verifica se os números de J1 são diferentes
