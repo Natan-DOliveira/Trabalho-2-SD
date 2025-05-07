@@ -23,7 +23,7 @@ FIM DE JOGO:
 -contabiliza vitória de um dos jogadores e volta para LER SEGREDO1
 */
 
-module game (
+module BullCow_Game (
     input logic reset,
     input logic clock,
     input logic enter,
