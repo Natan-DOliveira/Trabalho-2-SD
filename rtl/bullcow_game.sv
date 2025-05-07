@@ -144,24 +144,31 @@ module BullCow_Game (
 			J1_guessed[2] <= numbers[2];
 			J1_guessed[3] <= numbers[3];
 
-			    for (int i = 0; i < 4; i++) begin
-				    if (J1_guessed[i] == magic_J2[i])
-					    bull_count++;
-				    if (bull_count == 4) begin 
-					    win_J1++; 
-					    state <= END_GAME; 
-				    end
-				    if (bull_count < 4) begin
-			    for (int i = 0; i < 4; i++) begin
-				    if (J1_guessed[i] != magic_J2[i]) begin
-					    for (int j = 0; j < 4; j++) begin
-						    if(J1_guessed[i] == magic_J2[j]) begin
-						    cow_count++;
-				    end
-			    end
-		    end
-	    end
-	end
+		for (int i = 0; i < 4; i++) begin
+			if (J1_guessed[i] == magic_J2[i]) begin
+        			bull_count++;
+    			end
+		end
+
+		// Se acertou todos, vence
+		if (bull_count == 4) begin
+    			win_J1++;
+    			state <= END_GAME;
+		end else begin
+			
+    		// Conta os 'cows' (números certos em posições erradas)
+    		for (int i = 0; i < 4; i++) begin
+			if (J1_guessed[i] != magic_J2[i]) begin
+            			for (int j = 0; j < 4; j++) begin
+					if ((J1_guessed[i] == magic_J2[j]) && (i != j)) begin
+                    				cow_count++;
+                    			break; // evita múltiplas contagens do mesmo
+                		end
+            		end
+     		end
+   	end
+end
+
 				    state <= J2_GUESS;
 	end
                     else begin
@@ -188,24 +195,32 @@ module BullCow_Game (
 			J2_guessed[2] <= numbers[2];
 			J2_guessed[3] <= numbers[3];
 
-			    for (int i = 0; i < 4; i++) begin
-				    if (J2_guessed[i] == magic_J1[i])
-					    bull_count++;
-				    if (bull_count == 4) begin 
-					    win_J2++; 
-					    state <= END_GAME; 
-				    end
-				    if (bull_count < 4) begin
-			    for (int i = 0; i < 4; i++) begin
-				    if (J2_guessed[i] != magic_J1[i]) begin
-					    for (int j = 0; j < 4; j++) begin
-						    if(J2_guessed[i] == magic_J1[j]) begin
-						    cow_count++;
-				    end
-			    end
-		    end
-	    end
-     end
+			// Primeiro, conta os 'bulls'
+			for (int i = 0; i < 4; i++) begin
+    				if (J2_guessed[i] == magic_J1[i]) begin
+        				bull_count++;
+    				end
+			end
+
+			// Se acertou todos, vence
+			if (bull_count == 4) begin
+    				win_J2++;
+    				state <= END_GAME;
+			end else begin
+				
+    			// Conta os 'cows' (números certos em posições erradas)
+    			for (int i = 0; i < 4; i++) begin
+        			if (J2_guessed[i] != magic_J1[i]) begin
+            				for (int j = 0; j < 4; j++) begin
+                				if ((J2_guessed[i] == magic_J1[j]) && (i != j)) begin
+                    					cow_count++;
+                    				break; // evita múltiplas contagens do mesmo
+                			end
+            			end
+        		end
+                end
+	end
+
 				    state <= J1_GUESS;
      end
                     else begin
