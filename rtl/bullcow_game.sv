@@ -152,7 +152,6 @@ module BullCow_Game (
 					    state <= END_GAME; 
 				    end
 				    if (bull_count < 4) begin
-			    end
 			    for (int i = 0; i < 4; i++) begin
 				    if (J1_guessed[i] != magic_J2[i]) begin
 					    for (int j = 0; j < 4; j++) begin
@@ -162,6 +161,7 @@ module BullCow_Game (
 			    end
 		    end
 	    end
+	end
 				    state <= J2_GUESS;
 	end
                     else begin
@@ -196,7 +196,6 @@ module BullCow_Game (
 					    state <= END_GAME; 
 				    end
 				    if (bull_count < 4) begin
-			    end
 			    for (int i = 0; i < 4; i++) begin
 				    if (J2_guessed[i] != magic_J1[i]) begin
 					    for (int j = 0; j < 4; j++) begin
@@ -206,6 +205,7 @@ module BullCow_Game (
 			    end
 		    end
 	    end
+     end
 				    state <= J1_GUESS;
      end
                     else begin
