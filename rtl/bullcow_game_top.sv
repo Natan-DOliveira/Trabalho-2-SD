@@ -1,4 +1,4 @@
-module Bullcow_Game_Top (
+module BullCow_Game_Top (
     input logic clock,
     input logic reset,
     input logic enter,
@@ -8,5 +8,21 @@ module Bullcow_Game_Top (
     output logic display[7:0]
 );
 
+        // Sinais internos
 
 
+        // Instacia os mõdulos
+    BullCow_Game game_logic (
+        .clock(clock),
+        .reset(enter),
+        .enter(enter),
+        .SW(SW)
+    );
+
+    Game_Display game_display (
+        .clock(clock),
+        .reset(reset),
+        .display(display),
+        .segment(segment),
+        ,LED(LED)
+    );
