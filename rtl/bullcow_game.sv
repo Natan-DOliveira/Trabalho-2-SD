@@ -43,7 +43,6 @@ module game (
 
     state_t state;
 
-	//registradores
 	logic [3:0] numbers [3:0]; 
 	logic [3:0] magic_J1 [3:0]; // números do J1
 	logic [3:0] magic_J2 [3:0]; // números do J2
@@ -52,6 +51,8 @@ module game (
 	logic valid;
 	int bull_count;
 	int cow_count;
+	int win_J1;
+	int win_J2;
 
     // Verifica se os números de J1 são diferentes
     always_comb begin
@@ -76,6 +77,8 @@ module game (
             points[1] <= 8'b0;
 	    bull_count = 0;
 	    cow_count = 0;
+	    win_J2 = 0;
+	    win_J1 = 0;
         end else begin
             case (state)
                 J1_SETUP: begin
@@ -144,7 +147,10 @@ module game (
 			    for (int i = 0; i < 4; i++) begin
 				    if (J1_guessed[i] == magic_J2[i])
 					    bull_count++;
-				    if (bull_count == 4) state <= END_GAME;
+				    if (bull_count == 4) begin 
+					    win_J1++; 
+					    state <= END_GAME; 
+				    end
 				    if (bull_count < 4) begin
 			    end
 			    for (int i = 0; i < 4; i++) begin
@@ -185,7 +191,10 @@ module game (
 			    for (int i = 0; i < 4; i++) begin
 				    if (J2_guessed[i] == magic_J1[i])
 					    bull_count++;
-				    if (bull_count == 4) state <= END_GAME;
+				    if (bull_count == 4) begin 
+					    win_J2++; 
+					    state <= END_GAME; 
+				    end
 				    if (bull_count < 4) begin
 			    end
 			    for (int i = 0; i < 4; i++) begin
@@ -203,6 +212,10 @@ module game (
                         state <= J2_GUESS; // permanece no setup
                     end
                 end
+
+		    END_GAME: begin
+			
+		    end
                 default: state <= state;
             endcase
         end
