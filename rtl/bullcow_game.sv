@@ -24,11 +24,12 @@ FIM DE JOGO:
 */
 
 module game (
+    input logic reset,
+    input logic clock,
+	input logic enter,
     input logic [3:0][3:0] guess,
     input logic [15:0] SW,
     output logic [15:0] LED,
-    input logic reset,
-    input logic clock,
     output logic [1:0][7:0] points
 );
 
@@ -46,6 +47,8 @@ module game (
 	logic [3:0] numbers [3:0]; 
 	logic [3:0] magic_J1 [3:0]; // números do J1
 	logic [3:0] magic_J2 [3:0]; // números do J2
+	logic [3:0] J1_guessed [3:0];
+	logic [3:0] J2_guessed [3:0];
 	logic valid;
 
     // Verifica se os números de J1 são diferentes
