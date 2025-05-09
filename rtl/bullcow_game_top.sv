@@ -2,27 +2,44 @@ module BullCow_Game_Top (
     input logic clock,
     input logic reset,
     input logic enter,
-    input logic SW[15:0],
-    output logic LED[15:0],
-    output logic segment[7:0],
-    output logic display[7:0]
+    input logic [15:0] SW,
+
+    output logic [7:0] AN,
+    output logic [7:0] DDP,
+    output logic [15:0] LED
 );
 
         // Sinais internos
+    logic [7:0] J1_points;
+    logic [7:0] J2_points;
+    logic [2:0] cow_count;
+    logic [2:0] bull_count;
+	logic [2:0] game_state;
 
-
-        // Instacia os mõdulos
+        // Instacia os módulos
     BullCow_Game game_logic (
         .clock(clock),
-        .reset(enter),
+        .reset(reset),
         .enter(enter),
-        .SW(SW)
+        .SW(SW),
+        .J1_points(J1_points),
+        .J2_points(J2_points),
+        .cow_count(cow_count),
+        .bull_count(bull_count),
+        .game_state(game_state)
     );
 
-    Game_Display game_display (
+    Game_Display_LED game_display (
         .clock(clock),
         .reset(reset),
-        .display(display),
-        .segment(segment),
-        ,LED(LED)
+        .AN(AN),
+        .DDP(DDP),
+        .LED(LED),
+        .J1_points(J1_points),
+        .J2_points(J2_points),
+        .cow_count(cow_count),
+        .bull_count(bull_count),
+        .game_state(game_state)
     );
+    
+endmodule

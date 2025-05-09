@@ -27,12 +27,16 @@ module BullCow_Game (
     input logic reset,
     input logic clock,
     input logic enter,
-    input logic [3:0][3:0] guess,
     input logic [15:0] SW,
-    output logic [15:0] LED,
-    output logic [1:0][7:0] points
+
+	output logic [2:0] bull_count,
+	output logic [2:0] cow_count,
+	output logic [2:0] game_state,
+    output logic [7:0] J1_points,
+	output logic [7:0] J2_points
 );
 
+		// Definição dos estados
     typedef enum logic[2:0] {
         J1_SETUP  = 3'b000,
         J2_SETUP  = 3'b001,
@@ -41,20 +45,23 @@ module BullCow_Game (
         END_GAME  = 3'b111
     } state_t;
 
+		// Registradores
     state_t state;
-
-	logic [3:0] numbers [3:0]; 
-	logic [3:0] magic_J1 [3:0]; // números do J1
-	logic [3:0] magic_J2 [3:0]; // números do J2
-	logic [3:0] J1_guessed [3:0];
-	logic [3:0] J2_guessed [3:0];
+	logic [3:0][3:0] numbers; 
+	logic [3:0][3:0] magic_J1; 					// números do J1
+	logic [3:0][3:0] magic_J2; 					// números do J2
+	logic [3:0][3:0] J1_guessed;
+	logic [3:0][3:0] J2_guessed;
 	logic valid;
-	int bull_count;
-	int cow_count;
-	int win_J1;
-	int win_J2;
+	logic [2:0] reg_bull_count;
+	logic [2:0] reg_cow_count;
 
-    // Verifica se os números de J1 são diferentes
+		// Output do estado & bull_count e cow_count
+	assing game_state = state;
+	assing bull_count = reg_bull_count;
+	assing cow_count  = reg_cow_count;
+
+    	// Verifica se os números de J1 são diferentes
     always_comb begin
         valid = (numbers[0] != numbers[1]) &&
                 (numbers[0] != numbers[2]) &&
@@ -64,180 +71,138 @@ module BullCow_Game (
                 (numbers[2] != numbers[3]);
     end
 
-    // Lógica sequencial da máquina de estados
-    always_ff @(posedge clock or posedge reset) begin
+    	// Lógica sequencial da máquina de estados
+	always_ff @(posedge clock or posedge reset) begin
         if (reset) begin
             state <= J1_SETUP;
-            numbers[0] <= 4'b0;
-            numbers[1] <= 4'b0;
-            numbers[2] <= 4'b0;
-            numbers[3] <= 4'b0;
-            LED <= 16'b0;
-            points[0] <= 8'b0;
-            points[1] <= 8'b0;
-	    bull_count = 0;
-	    cow_count = 0;
-	    win_J2 = 0;
-	    win_J1 = 0;
-        end else begin
+			for (int i = 0; i < 4; i++) begin
+				numbers[i]  <= 4'b0;
+				magic_J1[i] <= 4'b0;
+				magic_J2[i] <= 4'b0;
+				J1_guessed  <= 4'b0;
+				J2_guessed  <= 4'b0;
+			end 
+            bull_count_reg <= 3'b0;
+            cow_count_reg  <= 3'b0;
+            win_J1 <= 8'b0;
+            win_J2 <= 8'b0;
+			J1_points <= 8'b0;
+			J2_points <= 8'b0;
+        end else if (enter) begin
             case (state)
                 J1_SETUP: begin
                     numbers[0] <= SW[3:0];
                     numbers[1] <= SW[7:4];
                     numbers[2] <= SW[11:8];
                     numbers[3] <= SW[15:12];
-                    
-                    if (valid)
-			magic_J1[0] <= numbers[0];
-			magic_J1[1] <= numbers[1];
-			magic_J1[2] <= numbers[2];
-			magic_J1[3] <= numbers[3];
-
+                    if (valid) begin
+						for (int i = 0; i < 4; i++) begin
+							magic_J1[i] <= numbers[i];
+						end
                         state <= J2_SETUP;
-			
-                    else begin
-                        // limpa números se inválido
-                        numbers[0] <= 4'b0;
-                        numbers[1] <= 4'b0;
-                        numbers[2] <= 4'b0;
-                        numbers[3] <= 4'b0;
-                        state <= J1_SETUP; // permanece no setup
-                    end
+					end
                 end
 
                 J2_SETUP: begin
-	            numbers[0] <= 4'b0;
-                    numbers[1] <= 4'b0;
-                    numbers[2] <= 4'b0;
-                    numbers[3] <= 4'b0;
-			
                     numbers[0] <= SW[3:0];
                     numbers[1] <= SW[7:4];
                     numbers[2] <= SW[11:8];
                     numbers[3] <= SW[15:12];
-                    
-                    if (valid)
-			magic_J2[0] <= numbers[0];
-			magic_J2[1] <= numbers[1];
-			magic_J2[2] <= numbers[2];
-			magic_J2[3] <= numbers[3];
-
+                    if (valid) begin
+						for (int i = 0; i < 4; i++) begin
+							magic_J2[i] <= numbers[i];
+						end
                         state <= J1_GUESS;
-                    else begin
-                        state <= J2_SETUP; // permanece no setup
-                    end
-                end
-		    J1_GUESS: begin
-			bull_count <= 0;
-			cow_count <= 0;
-			numbers[0] <= 4'b0;
-                    	numbers[1] <= 4'b0;
-                    	numbers[2] <= 4'b0;
-                    	numbers[3] <= 4'b0;
-			
-                    	numbers[0] <= SW[3:0];
-                    	numbers[1] <= SW[7:4];
-                    	numbers[2] <= SW[11:8];
-                    	numbers[3] <= SW[15:12];
-			    
-		    if (valid)
-			J1_guessed[0] <= numbers[0];
-			J1_guessed[1] <= numbers[1];
-			J1_guessed[2] <= numbers[2];
-			J1_guessed[3] <= numbers[3];
-
-		for (int i = 0; i < 4; i++) begin
-			if (J1_guessed[i] == magic_J2[i]) begin
-        			bull_count++;
-    			end
-		end
-
-		// Se acertou todos, vence
-		if (bull_count == 4) begin
-    			win_J1++;
-    			state <= END_GAME;
-		end else begin
-			
-    		// Conta os 'cows' (números certos em posições erradas)
-    		for (int i = 0; i < 4; i++) begin
-			if (J1_guessed[i] != magic_J2[i]) begin
-            			for (int j = 0; j < 4; j++) begin
-					if ((J1_guessed[i] == magic_J2[j]) && (i != j)) begin
-                    				cow_count++;
-                    			break; // evita múltiplas contagens do mesmo
-                		end
-            		end
-     		end
-   	end
-end
-
-				    state <= J2_GUESS;
-	end
-                    else begin
-                        state <= J1_GUESS; // permanece no setup
-                    end
+					end
                 end
 
-		    J2_GUESS: begin
-			bull_count <= 0;
-			cow_count <= 0;
-			numbers[0] <= 4'b0;
-                    	numbers[1] <= 4'b0;
-                    	numbers[2] <= 4'b0;
-                    	numbers[3] <= 4'b0;
-			
-                    	numbers[0] <= SW[3:0];
-                    	numbers[1] <= SW[7:4];
-                    	numbers[2] <= SW[11:8];
-                    	numbers[3] <= SW[15:12];
+		    	J1_GUESS: begin
+					reg_bull_count <= 4'b0;
+					reg_cow_count <= 4'b0;
+                    numbers[0] <= SW[3:0];
+                    numbers[1] <= SW[7:4];
+                    numbers[2] <= SW[11:8];
+                    numbers[3] <= SW[15:12];
+					if (valid) begin
+						for (int i = 0; i < 4; i++) begin
+							J1_guessed[i] <= numbers[i];	
+						end
+							// Conta os 'bulls'
+						for (int i = 0; i < 4; i++) begin
+							if (J1_guessed[i] == magic_J2[i]) begin
+        						reg_bull_count <= reg_bull_count + 1;
+    						end
+						end
+							// Se acertou todos, vence
+						if (bull_count == 4) begin
+    						J1_points <= J1_points + 1;
+    						state <= END_GAME;
+						end else begin
+    							// Conta os 'cows' (números certos em posições erradas)
+    						for (int i = 0; i < 4; i++) begin
+								if (J1_guessed[i] != magic_J2[i]) begin
+            						for (int j = 0; j < 4; j++) begin
+										if ((J1_guessed[i] == magic_J2[j]) && (i != j)) begin
+                    						reg_cow_count <= reg_cow_count + 1;
+                    						break; // evita múltiplas contagens do mesmo
+                						end
+            						end
+     							end
+   							end
+						end
+				    	state <= J2_GUESS;
+					end
+                end
+
+		    	J2_GUESS: begin
+					reg_bull_count <= 4'b0;
+					reg_cow_count  <= 4'b0;
+			        numbers[0] <= SW[3:0];
+                    numbers[1] <= SW[7:4];
+                    numbers[2] <= SW[11:8];
+                    numbers[3] <= SW[15:12];
 			    
-		    if (valid)
-			J2_guessed[0] <= numbers[0];
-			J2_guessed[1] <= numbers[1];
-			J2_guessed[2] <= numbers[2];
-			J2_guessed[3] <= numbers[3];
-
-			// Primeiro, conta os 'bulls'
-			for (int i = 0; i < 4; i++) begin
-    				if (J2_guessed[i] == magic_J1[i]) begin
-        				bull_count++;
-    				end
-			end
-
-			// Se acertou todos, vence
-			if (bull_count == 4) begin
-    				win_J2++;
-    				state <= END_GAME;
-			end else begin
-				
-    			// Conta os 'cows' (números certos em posições erradas)
-    			for (int i = 0; i < 4; i++) begin
-        			if (J2_guessed[i] != magic_J1[i]) begin
-            				for (int j = 0; j < 4; j++) begin
-                				if ((J2_guessed[i] == magic_J1[j]) && (i != j)) begin
-                    					cow_count++;
-                    				break; // evita múltiplas contagens do mesmo
+		    		if (valid) begin
+						for (int i = 0; i < 4; i++) begin
+							J2_guessed[i] <= numbers[i];
+						end
+							// Conta os 'bulls'
+						for (int i = 0; i < 4; i++) begin
+    						if (J2_guessed[i] == magic_J1[i]) begin
+        						reg_bull_count <= reg_bull_count + 1;
+    						end
+						end
+							// Se acertou todos, vence
+						if (bull_count == 4) begin
+    						J2_points <= J2_points + 1;
+    						state <= END_GAME;
+						end else begin
+    							// Conta os 'cows' (números certos em posições erradas)
+    						for (int i = 0; i < 4; i++) begin
+        						if (J2_guessed[i] != magic_J1[i]) begin
+            						for (int j = 0; j < 4; j++) begin
+                						if ((J2_guessed[i] == magic_J1[j]) && (i != j)) begin
+                    						reg_cow_count <= reg_cow_count + 1;
+                    						break; // evita múltiplas contagens do mesmo
+                						end
+            						end
+        						end
                 			end
-            			end
-        		end
-                end
-	end
+						end
+				    	state <= J1_GUESS;
+     				end
+				end
 
-				    state <= J1_GUESS;
-     end
-                    else begin
-                        state <= J2_GUESS; // permanece no setup
-                    end
-                end
-
-		    END_GAME: begin
-			
-		    end
-                default: state <= state;
+		    	END_GAME: begin
+					state <= J1_SETUP;
+		    	end
+                
+				default: begin
+					state <= state;
+				end
             endcase
         end
     end
-
 endmodule
 
 			
