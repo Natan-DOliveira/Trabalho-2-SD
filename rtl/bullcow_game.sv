@@ -82,10 +82,8 @@ module BullCow_Game (
 				J1_guessed  <= 4'b0;
 				J2_guessed  <= 4'b0;
 			end 
-            bull_count_reg <= 3'b0;
-            cow_count_reg  <= 3'b0;
-            win_J1 <= 8'b0;
-            win_J2 <= 8'b0;
+            reg_bull_count_reg <= 3'b0;
+            reg_cow_count_reg  <= 3'b0;
 			J1_points <= 8'b0;
 			J2_points <= 8'b0;
         end else if (enter) begin
