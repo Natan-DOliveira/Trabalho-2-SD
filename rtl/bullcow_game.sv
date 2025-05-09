@@ -57,9 +57,9 @@ module BullCow_Game (
 	logic [2:0] reg_cow_count;
 
 		// Output do estado & bull_count e cow_count
-	assing game_state = state;
-	assing bull_count = reg_bull_count;
-	assing cow_count  = reg_cow_count;
+	assign game_state = state;
+	assign bull_count = reg_bull_count;
+	assign cow_count  = reg_cow_count;
 
     	// Verifica se os números de J1 são diferentes
     always_comb begin
