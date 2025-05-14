@@ -10,11 +10,12 @@ module BullCow_Game_Top (
 );
 
         // Sinais internos
-    logic [7:0] J1_points;
-    logic [7:0] J2_points;
+    logic guess_confirmed;
     logic [2:0] cow_count;
     logic [2:0] bull_count;
 	logic [2:0] game_state;
+    logic [7:0] J1_points;
+    logic [7:0] J2_points;
 
         // Instacia os módulos
     BullCow_Game game_logic (
@@ -26,7 +27,8 @@ module BullCow_Game_Top (
         .J2_points(J2_points),
         .cow_count(cow_count),
         .bull_count(bull_count),
-        .game_state(game_state)
+        .game_state(game_state),
+        .guess_confirmed(guess_confirmed)
     );
 
     Game_Display_LED game_display (
@@ -39,7 +41,8 @@ module BullCow_Game_Top (
         .J2_points(J2_points),
         .cow_count(cow_count),
         .bull_count(bull_count),
-        .game_state(game_state)
+        .game_state(game_state),
+        .guess_confirmed(guess_confirmed)
     );
     
 endmodule

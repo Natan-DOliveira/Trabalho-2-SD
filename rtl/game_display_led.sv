@@ -15,11 +15,13 @@ module Game_Display_LED
 );
 
         // Estados do jogo
-    localparam J1_SETUP = 3'b000;
-    localparam J2_SETUP = 3'b001;
-    localparam J1_GUESS = 3'b010;
-    localparam J2_GUESS = 3'b011;
-    localparam END_GAME = 3'b111;
+    typedef enum logic[2:0] {
+        J1_SETUP  = 3'b000,
+        J2_SETUP  = 3'b001,
+        J1_GUESS  = 3'b010,
+        J2_GUESS  = 3'b011,
+        END_GAME  = 3'b111
+    } state_t;
 
         // Registradores
     reg ck_1KHz;                                // Clock de 1 kHz
@@ -39,36 +41,35 @@ module Game_Display_LED
 
         // Lógica combinacional para os LEDs
     always_comb begin
-
         if (reset) begin
             LED = 16'b0;                        // Limpa os LEDs
         end
-
-            // LED[7:0] J1
-        case (J1_points)
-            8'd0:    LED[7:0] = 8'b00000000;
-            8'd1:    LED[7:0] = 8'b00000001;
-            8'd2:    LED[7:0] = 8'b00000011;
-            8'd3:    LED[7:0] = 8'b00000111;
-            8'd4:    LED[7:0] = 8'b00001111;
-            8'd5:    LED[7:0] = 8'b00011111;
-            8'd6:    LED[7:0] = 8'b00111111;
-            8'd7:    LED[7:0] = 8'b01111111;
-            default: LED[7:0] = 8'b11111111;
-        endcase
-
-            // LED[15:8] J2
-        case (J2_points)
-            8'd0:    LED[15:8] = 8'b00000000;
-            8'd1:    LED[15:8] = 8'b00000001;
-            8'd2:    LED[15:8] = 8'b00000011;
-            8'd3:    LED[15:8] = 8'b00000111;
-            8'd4:    LED[15:8] = 8'b00001111;
-            8'd5:    LED[15:8] = 8'b00011111;
-            8'd6:    LED[15:8] = 8'b00111111;
-            8'd7:    LED[15:8] = 8'b01111111;
-            default: LED[15:8] = 8'b11111111;
-        endcase
+        else begin
+                // LED[7:0] J1
+            case (J1_points)
+                8'd0:    LED[7:0] = 8'b00000000;
+                8'd1:    LED[7:0] = 8'b00000001;
+                8'd2:    LED[7:0] = 8'b00000011;
+                8'd3:    LED[7:0] = 8'b00000111;
+                8'd4:    LED[7:0] = 8'b00001111;
+                8'd5:    LED[7:0] = 8'b00011111;
+                8'd6:    LED[7:0] = 8'b00111111;
+                8'd7:    LED[7:0] = 8'b01111111;
+                default: LED[7:0] = 8'b11111111;
+            endcase
+                // LED[15:8] J2
+            case (J2_points)
+                8'd0:    LED[15:8] = 8'b00000000;
+                8'd1:    LED[15:8] = 8'b00000001;
+                8'd2:    LED[15:8] = 8'b00000011;
+                8'd3:    LED[15:8] = 8'b00000111;
+                8'd4:    LED[15:8] = 8'b00001111;
+                8'd5:    LED[15:8] = 8'b00011111;
+                8'd6:    LED[15:8] = 8'b00111111;
+                8'd7:    LED[15:8] = 8'b01111111;
+                default: LED[15:8] = 8'b11111111;
+            endcase'
+        end
     end
 
         // Geração do clock de 1 kHz
@@ -196,7 +197,8 @@ module Game_Display_LED
         if (reset) begin
             dig_selection <= 3'd0;
             selected_dig <= 5'd0;
-            AN <= 8'b11111111;                  // Desativa todos os displays
+            AN  <= 8'b1;
+            DDP <= 8'b1;
         end
         else begin
             if (dig_selection == 3'b111) begin
