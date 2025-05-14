@@ -26,7 +26,7 @@ FIM DE JOGO:
 module BullCow_Game (
 	input logic clock,
 	input logic reset,
-    input logic enter,
+	input logic enter,
     input logic [15:0] SW,             			// Switches para entrada de dígitos
 
 	output logic guess_confirmed,       		// Indica jogada confirmada
@@ -220,5 +220,4 @@ module BullCow_Game (
         end
         prev_enter <= enter;
     end
-
 endmodule
