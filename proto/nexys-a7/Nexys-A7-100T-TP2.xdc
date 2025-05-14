@@ -4,8 +4,8 @@
 ## - uncomment the lines corresponding to used pins
 ## - rename the used ports (in each line, after get_ports) according to the top level signal names in the project
 
-set_property -dict { CLOCK_DEDICATED_ROUTE FALSE } [get_nets ssl_IBUF]
-set_property -dict { CLOCK_DEDICATED_ROUTE FALSE } [get_nets ssr_IBUF]
+#set_property -dict { CLOCK_DEDICATED_ROUTE FALSE } [get_nets ssl_IBUF]
+#set_property -dict { CLOCK_DEDICATED_ROUTE FALSE } [get_nets ssr_IBUF]
 
 ## Clock signal
 set_property -dict { PACKAGE_PIN E3    IOSTANDARD LVCMOS33 } [get_ports clock];

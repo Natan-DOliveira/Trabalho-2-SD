@@ -1,4 +1,6 @@
-module Game_Display_LED (
+module Game_Display_LED
+#(parameter HALF_MS_COUNT = 50000)              // 1 kHz com clock de 100 MHz 
+(
     input logic clock,
     input logic reset,
     input logic [7:0] J1_points,
@@ -7,13 +9,41 @@ module Game_Display_LED (
     input logic [2:0] cow_count,
     input logic [2:0] game_state,
 
-    output logic [7:0] AN,
-    output logic [7:0] DDP,
-    output logic [15:0] LED
+    output logic [7:0] AN,                      // Controle dos displays
+    output logic [7:0] DDP,                     // Segmentos de a até dp
+    output logic [15:0] LED                     // LEDs indicam a pontuação dos jogadores
 );
+
+        // Estados do jogo
+    localparam J1_SETUP = 3'b000;
+    localparam J2_SETUP = 3'b001;
+    localparam J1_GUESS = 3'b010;
+    localparam J2_GUESS = 3'b011;
+    localparam END_GAME = 3'b111;
+
+        // Registradores
+    reg ck_1KHz;                                // Clock de 1 kHz
+    reg [2:0]  dig_selection;                   // Seleciona o display atual (0 a 7)
+    reg [4:0]  selected_dig;                    // Digito selecionado
+    reg [31:0] count_50k;                       // Contador para o 1 KHz
+    // Entradas de dígitos
+    reg [5:0] d1;
+    reg [5:0] d2;
+    reg [5:0] d3;
+    reg [5:0] d4;
+    reg [5:0] d5;
+    reg [5:0] d6;
+    reg [5:0] d7;
+    reg [5:0] d8;
+
+
         // Lógica combinacional para os LEDs
     always_comb begin
-            
+
+        if (reset) begin
+            LED = 16'b0;                        // Limpa os LEDs
+        end
+
             // LED[7:0] J1
         case (J1_points)
             8'd0:    LED[7:0] = 8'b00000000;
@@ -41,11 +71,207 @@ module Game_Display_LED (
         endcase
     end
 
-        // Lógica síncrona de reset
-    always_ff @(posedge clock or posedge reset) begin
+        // Geração do clock de 1 kHz
+    always @(posedge clock or posedge reset) begin
         if (reset) begin
-            LED <= 16'b0;                       // Limpa os LEDs
+            ck_1KHz   <= 1'b0;
+            count_50k <= 32'd0;
+        end
+        else begin
+            if (count_50k == HALF_MS_COUNT - 1) begin
+                ck_1KHz   <= ~ck_1KHz;
+                count_50k <= 32'd0;
+            end
+            else begin
+                count_50k <= count_50k + 1;
+            end
         end
     end
 
+        // Geração dos dígitos d1 até d8 pelo estado atual do jogo
+    always_comb begin
+            // [5] = enable, [4:1] = char, [0] = dp
+        d1 = 6'b0;
+        d2 = 6'b0;
+        d3 = 6'b0;
+        d4 = 6'b0;
+        d5 = 6'b0;
+        d6 = 6'b0;
+        d7 = 6'b0;
+        d8 = 6'b0;
+
+        case (game_state) 
+            J1_SETUP: begin
+                    // display -> "J1 SETUP"
+                d1 = {1'b1, 4'hJ, 1'b0};        // J
+                d2 = {1'b1, 4'h1, 1'b1};        // 1
+                d3 =  6'b0;                     // espaço
+                d4 = {1'b1, 4'hS, 1'b0};        // S
+                d5 = {1'b1, 4'hE, 1'b0};        // E
+                d6 = {1'b1, 4'hT, 1'b0};        // T
+                d7 = {1'b1, 4'hU, 1'b0};        // U
+                d8 = {1'b1, 4'hP, 1'b0};        // P
+            end
+            
+            J2_SETUP: begin
+                    // display -> "J2 SETUP"
+                d1 = {1'b1, 4'hJ, 1'b0};        // J
+                d2 = {1'b1, 4'h2, 1'b1};        // 2
+                d3 =  6'b0;                     // espaço
+                d4 = {1'b1, 4'hS, 1'b0};        // S
+                d5 = {1'b1, 4'hE, 1'b0};        // E
+                d6 = {1'b1, 4'hT, 1'b0};        // T
+                d7 = {1'b1, 4'hU, 1'b0};        // U
+                d8 = {1'b1, 4'hP, 1'b0};        // P
+            end
+
+            J1_GUESS: begin
+                if (guess_confirmed) begin
+                        // display -> "X TO Y VA" | X: número de bulls | Y: número de cows
+                    d1 = {1'b1, bull_count[2:0], 1'b0, 1'b1};   // X
+                    d2 = 6'b0;                                  // espaço
+                    d3 = {1'b1, 4'hT, 1'b0};                    // T
+                    d4 = {1'b1, 4'hO, 1'b0};                    // O
+                    d5 = 6'b0;                                  // espaço
+                    d6 = {1'b1, cow_count[2:0], 1'b0, 1'b1};    // Y
+                    d7 = {1'b1, 4'hV, 1'b0};                    // V
+                    d8 = {1'b1, 4'hA, 1'b0};                    // A
+                end
+                else begin
+                        // display -> "J1 GUESS"
+                    d1 = {1'b1, 4'hJ, 1'b0};        // J
+                    d2 = {1'b1, 4'h1, 1'b1};        // 1
+                    d3 =  6'b0;                     // espaço
+                    d4 = {1'b1, 4'hG, 1'b0};        // G
+                    d5 = {1'b1, 4'hU, 1'b0};        // U
+                    d6 = {1'b1, 4'hE, 1'b0};        // E
+                    d7 = {1'b1, 4'hS, 1'b0};        // S
+                    d8 = {1'b1, 4'hS, 1'b0};        // S
+                end
+            end
+
+            J1_GUESS: begin
+                if (guess_confirmed) begin
+                        // display -> "X TO Y VA" | X: número de bulls | Y: número de cows
+                    d1 = {1'b1, bull_count[2:0], 1'b0, 1'b1};   // X
+                    d2 = 6'b0;                                  // espaço
+                    d3 = {1'b1, 4'hT, 1'b0};                    // T
+                    d4 = {1'b1, 4'hO, 1'b0};                    // O
+                    d5 = 6'b0;                                  // espaço
+                    d6 = {1'b1, cow_count[2:0], 1'b0, 1'b1};    // Y
+                    d7 = {1'b1, 4'hV, 1'b0};                    // V
+                    d8 = {1'b1, 4'hA, 1'b0};                    // A
+                end
+                else begin
+                        // display -> "J2 GUESS"
+                    d1 = {1'b1, 4'hJ, 1'b0};        // J
+                    d2 = {1'b1, 4'h2, 1'b1};        // 2
+                    d3 =  6'b0;                     // espaço
+                    d4 = {1'b1, 4'hG, 1'b0};        // G
+                    d5 = {1'b1, 4'hU, 1'b0};        // U
+                    d6 = {1'b1, 4'hE, 1'b0};        // E
+                    d7 = {1'b1, 4'hS, 1'b0};        // S
+                    d8 = {1'b1, 4'hS, 1'b0};        // S
+                end
+            end
+
+            END_GAME: begin
+                if (bull_count == 4) begin
+                        // display -> "BULLSEYE"
+                    d1 = {1'b1, 4'hB, 1'b0};        // B
+                    d2 = {1'b1, 4'hU, 1'b1};        // U
+                    d3 = {1'b1, 4'hL, 1'b1};        // L
+                    d4 = {1'b1, 4'hL, 1'b0};        // L
+                    d5 = {1'b1, 4'hS, 1'b0};        // S
+                    d6 = {1'b1, 4'hE, 1'b0};        // E
+                    d7 = {1'b1, 4'hY, 1'b0};        // Y
+                    d8 = {1'b1, 4'hE, 1'b0};        // E
+                end
+            end
+        endcase
+    end
+
+        // Contador que seleciona o display e atualiza AN/selected_dig
+    always @(posedge ck_1KHz or posedge reset) begin
+        if (reset) begin
+            dig_selection <= 3'd0;
+            selected_dig <= 5'd0;
+            AN <= 8'b11111111;                  // Desativa todos os displays
+        end
+        else begin
+            if (dig_selection == 3'b111) begin
+                dig_selection <= 3'd0;
+            end
+            else begin
+                dig_selection <= dig_selection + 1;
+            end
+            
+            case (dig_selection)
+                3'd0: begin
+                    selected_dig <= d1[4:0];
+                    AN <= {7'b1111111, ~d1[5]};
+                end
+                
+                3'd1: begin
+                    selected_dig <= d2[4:0];
+                    AN <= {6'b111111, ~d2[5], 1'b1};
+                end
+        
+                3'd2: begin
+                    selected_dig <= d3[4:0];
+                    AN <= {5'b11111, ~d3[5], 2'b11};
+                end
+                
+                3'd3: begin
+                    selected_dig <= d4[4:0];
+                    AN <= {4'b1111, ~d4[5], 3'b111};
+                end
+                
+                3'd4: begin
+                    selected_dig <= d5[4:0];
+                    AN <= {3'b111, ~d5[5], 4'b1111};
+                end
+                
+                3'd5: begin
+                    selected_dig <= d6[4:0];
+                    AN <= {2'b11, ~d6[5], 5'b11111};
+                end
+        
+                3'd6: begin
+                    selected_dig <= d7[4:0];
+                    AN <= {1'b1, ~d7[5], 6'b111111};
+                end
+        
+                default: begin
+                    selected_dig <= d8[4:0];
+                    AN <= {~d8[5], 7'b1111111};
+                end
+            endcase
+        end
+    end
+
+        // Decodificador p/ 7 segmentos
+    always_comb begin
+        case (selected_dig[4:1])
+            4'h0:    DDP[7:1] = 7'b0000001;        // 0
+            4'h1:    DDP[7:1] = 7'b1001111;        // 1
+            4'h2:    DDP[7:1] = 7'b0010010;        // 2
+            4'h3:    DDP[7:1] = 7'b0000110;        // 3
+            4'h4:    DDP[7:1] = 7'b1001100;        // 4
+            4'hA:    DDP[7:1] = 7'b0001000;        // A
+            4'hB:    DDP[7:1] = 7'b1100000;        // B
+            4'hE:    DDP[7:1] = 7'b0110000;        // E
+            4'hG:    DDP[7:1] = 7'b0100001;        // G
+            4'hJ:    DDP[7:1] = 7'b1001110;        // J
+            4'hL:    DDP[7:1] = 7'b1110001;        // L
+            4'hO:    DDP[7:1] = 7'b0000001;        // O
+            4'hP:    DDP[7:1] = 7'b0011000;        // P
+            4'hS:    DDP[7:1] = 7'b0100100;        // S
+            4'hT:    DDP[7:1] = 7'b1110000;        // T
+            4'hU:    DDP[7:1] = 7'b1000001;        // U
+            4'hV:    DDP[7:1] = 7'b1000011;        // V
+            4'hY:    DDP[7:1] = 7'b1001100;        // Y
+            default: DDP[7:1] = 7'b1;              // apagado
+        endcase
+    end
 endmodule
