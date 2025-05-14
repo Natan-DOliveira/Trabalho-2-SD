@@ -3,6 +3,7 @@ module Game_Display_LED
 (
     input logic clock,
     input logic reset,
+    input logic guess_confirmed,
     input logic [7:0] J1_points,
     input logic [7:0] J2_points,
     input logic [2:0] bull_count,
@@ -68,7 +69,7 @@ module Game_Display_LED
                 8'd6:    LED[15:8] = 8'b00111111;
                 8'd7:    LED[15:8] = 8'b01111111;
                 default: LED[15:8] = 8'b11111111;
-            endcase'
+            endcase
         end
     end
 
@@ -104,26 +105,26 @@ module Game_Display_LED
         case (game_state) 
             J1_SETUP: begin
                     // display -> "J1 SETUP"
-                d1 = {1'b1, 4'hJ, 1'b0};        // J
+                d1 = {1'b1, 4'h6, 1'b0};        // J
                 d2 = {1'b1, 4'h1, 1'b1};        // 1
                 d3 =  6'b0;                     // espaço
-                d4 = {1'b1, 4'hS, 1'b0};        // S
+                d4 = {1'b1, 4'hC, 1'b0};        // S
                 d5 = {1'b1, 4'hE, 1'b0};        // E
-                d6 = {1'b1, 4'hT, 1'b0};        // T
-                d7 = {1'b1, 4'hU, 1'b0};        // U
-                d8 = {1'b1, 4'hP, 1'b0};        // P
+                d6 = {1'b1, 4'hD, 1'b0};        // T
+                d7 = {1'b1, 4'hF, 1'b0};        // U
+                d8 = {1'b1, 4'h9, 1'b0};        // P
             end
             
             J2_SETUP: begin
                     // display -> "J2 SETUP"
-                d1 = {1'b1, 4'hJ, 1'b0};        // J
+                d1 = {1'b1, 4'h6, 1'b0};        // J
                 d2 = {1'b1, 4'h2, 1'b1};        // 2
                 d3 =  6'b0;                     // espaço
-                d4 = {1'b1, 4'hS, 1'b0};        // S
+                d4 = {1'b1, 4'hC, 1'b0};        // S
                 d5 = {1'b1, 4'hE, 1'b0};        // E
-                d6 = {1'b1, 4'hT, 1'b0};        // T
-                d7 = {1'b1, 4'hU, 1'b0};        // U
-                d8 = {1'b1, 4'hP, 1'b0};        // P
+                d6 = {1'b1, 4'hD, 1'b0};        // T
+                d7 = {1'b1, 4'hF, 1'b0};        // U
+                d8 = {1'b1, 4'h9, 1'b0};        // P
             end
 
             J1_GUESS: begin
@@ -131,23 +132,23 @@ module Game_Display_LED
                         // display -> "X TO Y VA" | X: número de bulls | Y: número de cows
                     d1 = {1'b1, bull_count[2:0], 1'b0, 1'b1};   // X
                     d2 = 6'b0;                                  // espaço
-                    d3 = {1'b1, 4'hT, 1'b0};                    // T
-                    d4 = {1'b1, 4'hO, 1'b0};                    // O
+                    d3 = {1'b1, 4'hD, 1'b0};                    // T
+                    d4 = {1'b1, 4'h0, 1'b0};                    // O
                     d5 = 6'b0;                                  // espaço
                     d6 = {1'b1, cow_count[2:0], 1'b0, 1'b1};    // Y
-                    d7 = {1'b1, 4'hV, 1'b0};                    // V
+                    d7 = {1'b1, 4'hF, 1'b0};                    // V
                     d8 = {1'b1, 4'hA, 1'b0};                    // A
                 end
                 else begin
                         // display -> "J1 GUESS"
-                    d1 = {1'b1, 4'hJ, 1'b0};        // J
+                    d1 = {1'b1, 4'h6, 1'b0};        // J
                     d2 = {1'b1, 4'h1, 1'b1};        // 1
                     d3 =  6'b0;                     // espaço
-                    d4 = {1'b1, 4'hG, 1'b0};        // G
-                    d5 = {1'b1, 4'hU, 1'b0};        // U
+                    d4 = {1'b1, 4'h5, 1'b0};        // G
+                    d5 = {1'b1, 4'hF, 1'b0};        // U
                     d6 = {1'b1, 4'hE, 1'b0};        // E
-                    d7 = {1'b1, 4'hS, 1'b0};        // S
-                    d8 = {1'b1, 4'hS, 1'b0};        // S
+                    d7 = {1'b1, 4'hC, 1'b0};        // S
+                    d8 = {1'b1, 4'hC, 1'b0};        // S
                 end
             end
 
@@ -156,23 +157,23 @@ module Game_Display_LED
                         // display -> "X TO Y VA" | X: número de bulls | Y: número de cows
                     d1 = {1'b1, bull_count[2:0], 1'b0, 1'b1};   // X
                     d2 = 6'b0;                                  // espaço
-                    d3 = {1'b1, 4'hT, 1'b0};                    // T
-                    d4 = {1'b1, 4'hO, 1'b0};                    // O
+                    d3 = {1'b1, 4'hD, 1'b0};                    // T
+                    d4 = {1'b1, 4'h0, 1'b0};                    // O
                     d5 = 6'b0;                                  // espaço
                     d6 = {1'b1, cow_count[2:0], 1'b0, 1'b1};    // Y
-                    d7 = {1'b1, 4'hV, 1'b0};                    // V
+                    d7 = {1'b1, 4'hF, 1'b0};                    // V
                     d8 = {1'b1, 4'hA, 1'b0};                    // A
                 end
                 else begin
                         // display -> "J2 GUESS"
-                    d1 = {1'b1, 4'hJ, 1'b0};        // J
+                    d1 = {1'b1, 4'h6, 1'b0};        // J
                     d2 = {1'b1, 4'h2, 1'b1};        // 2
                     d3 =  6'b0;                     // espaço
-                    d4 = {1'b1, 4'hG, 1'b0};        // G
-                    d5 = {1'b1, 4'hU, 1'b0};        // U
+                    d4 = {1'b1, 4'h5, 1'b0};        // G
+                    d5 = {1'b1, 4'hF, 1'b0};        // U
                     d6 = {1'b1, 4'hE, 1'b0};        // E
-                    d7 = {1'b1, 4'hS, 1'b0};        // S
-                    d8 = {1'b1, 4'hS, 1'b0};        // S
+                    d7 = {1'b1, 4'hC, 1'b0};        // S
+                    d8 = {1'b1, 4'hC, 1'b0};        // S
                 end
             end
 
@@ -180,12 +181,12 @@ module Game_Display_LED
                 if (bull_count == 4) begin
                         // display -> "BULLSEYE"
                     d1 = {1'b1, 4'hB, 1'b0};        // B
-                    d2 = {1'b1, 4'hU, 1'b1};        // U
-                    d3 = {1'b1, 4'hL, 1'b1};        // L
-                    d4 = {1'b1, 4'hL, 1'b0};        // L
-                    d5 = {1'b1, 4'hS, 1'b0};        // S
+                    d2 = {1'b1, 4'hF, 1'b1};        // U
+                    d3 = {1'b1, 4'h7, 1'b1};        // L
+                    d4 = {1'b1, 4'h7, 1'b0};        // L
+                    d5 = {1'b1, 4'hC, 1'b0};        // S
                     d6 = {1'b1, 4'hE, 1'b0};        // E
-                    d7 = {1'b1, 4'hY, 1'b0};        // Y
+                    d7 = {1'b1, 4'h8, 1'b0};        // Y
                     d8 = {1'b1, 4'hE, 1'b0};        // E
                 end
             end
@@ -250,30 +251,24 @@ module Game_Display_LED
                 end
             endcase
         end
-    end
-
-        // Decodificador p/ 7 segmentos
-    always_comb begin
         case (selected_dig[4:1])
-            4'h0:    DDP[7:1] = 7'b0000001;        // 0
-            4'h1:    DDP[7:1] = 7'b1001111;        // 1
-            4'h2:    DDP[7:1] = 7'b0010010;        // 2
-            4'h3:    DDP[7:1] = 7'b0000110;        // 3
-            4'h4:    DDP[7:1] = 7'b1001100;        // 4
-            4'hA:    DDP[7:1] = 7'b0001000;        // A
-            4'hB:    DDP[7:1] = 7'b1100000;        // B
-            4'hE:    DDP[7:1] = 7'b0110000;        // E
-            4'hG:    DDP[7:1] = 7'b0100001;        // G
-            4'hJ:    DDP[7:1] = 7'b1001110;        // J
-            4'hL:    DDP[7:1] = 7'b1110001;        // L
-            4'hO:    DDP[7:1] = 7'b0000001;        // O
-            4'hP:    DDP[7:1] = 7'b0011000;        // P
-            4'hS:    DDP[7:1] = 7'b0100100;        // S
-            4'hT:    DDP[7:1] = 7'b1110000;        // T
-            4'hU:    DDP[7:1] = 7'b1000001;        // U
-            4'hV:    DDP[7:1] = 7'b1000011;        // V
-            4'hY:    DDP[7:1] = 7'b1001100;        // Y
-            default: DDP[7:1] = 7'b1;              // apagado
+            4'h0:    DDP[7:1] <= 7'b0000001;        // 0
+            4'h1:    DDP[7:1] <= 7'b1001111;        // 1
+            4'h2:    DDP[7:1] <= 7'b0010010;        // 2
+            4'h3:    DDP[7:1] <= 7'b0000110;        // 3
+            4'h4:    DDP[7:1] <= 7'b1001100;        // 4
+            4'hA:    DDP[7:1] <= 7'b0001000;        // A
+            4'hB:    DDP[7:1] <= 7'b1100000;        // B
+            4'hE:    DDP[7:1] <= 7'b0110000;        // E
+            4'h5:    DDP[7:1] <= 7'b0100001;        // G
+            4'h6:    DDP[7:1] <= 7'b1001110;        // J
+            4'h7:    DDP[7:1] <= 7'b1110001;        // L
+            4'h9:    DDP[7:1] <= 7'b0011000;        // P
+            4'hC:    DDP[7:1] <= 7'b0100100;        // S
+            4'hD:    DDP[7:1] <= 7'b1110000;        // T
+            4'hF:    DDP[7:1] <= 7'b1000001;        // U e V
+            4'h8:    DDP[7:1] <= 7'b1001100;        // Y
+            default: DDP[7:1] <= 7'b1111111;        // apagado
         endcase
     end
 endmodule
