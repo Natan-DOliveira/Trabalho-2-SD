@@ -29,12 +29,12 @@ module BullCow_Game (
     input logic enter,
     input logic [15:0] SW,             			// Switches para entrada de dígitos
 
-	output logic guess_confirmed       			// Indica jogada confirmada
+	output logic guess_confirmed,       		// Indica jogada confirmada
 	output logic [2:0] cow_count,      			// Contagem de vacas
     output logic [2:0] bull_count,     			// Contagem de touros
     output logic [2:0] game_state,     			// Estado atual do jogo
     output logic [7:0] J1_points,      			// Pontos do J1
-    output logic [7:0] J2_points,      			// Pontos do J2
+    output logic [7:0] J2_points      			// Pontos do J2
 );
 
     	// Definição dos estados
@@ -49,7 +49,8 @@ module BullCow_Game (
     	// Registradores
 	logic valid;                       			// Indica entrada válida
     state_t state;                     			// Estado atual
-	logic [2:0] prev_state						// Estado anterior
+    logic prev_enter;							// Valor anterior do enter
+	logic [2:0] prev_state;						// Estado anterior
     logic [3:0][3:0] numbers;          			// Entrada temporária de dígitos
     logic [3:0][3:0] magic_J1;         			// Número mágico de J1
     logic [3:0][3:0] magic_J2;         			// Número mágico de J2
@@ -95,7 +96,9 @@ module BullCow_Game (
             J1_points <= 8'b0;
             J2_points <= 8'b0;
             guess_confirmed_reg <= 1'b0;
-        end else if (enter) begin
+            prev_enter <= 1'b0;
+        end
+        else if (enter == 1 && prev_enter == 0) begin
 			prev_state <= state;
             case (state)
                 J1_SETUP: begin
@@ -215,6 +218,7 @@ module BullCow_Game (
                 end
             endcase
         end
+        prev_enter <= enter;
     end
 
 endmodule
