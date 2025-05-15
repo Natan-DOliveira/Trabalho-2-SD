@@ -8,7 +8,6 @@ module BullCow_Game_Top (
     output logic [7:0] DDP,
     output logic [15:0] LED
 );
-
         // Sinais internos
     logic guess_confirmed;
     logic [2:0] cow_count;
@@ -30,7 +29,6 @@ module BullCow_Game_Top (
         .game_state(game_state),
         .guess_confirmed(guess_confirmed)
     );
-
     Game_Display_LED game_display (
         .clock(clock),
         .reset(reset),
@@ -44,5 +42,4 @@ module BullCow_Game_Top (
         .game_state(game_state),
         .guess_confirmed(guess_confirmed)
     );
-    
 endmodule

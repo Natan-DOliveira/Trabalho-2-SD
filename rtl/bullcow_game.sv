@@ -49,13 +49,11 @@ module BullCow_Game (
     	// Registradores
 	logic valid;                       			// Indica entrada válida
     state_t state;                     			// Estado atual
+    state_t prev_state;					        // Estado anterior
     logic prev_enter;							// Valor anterior do enter
-	logic [2:0] prev_state;						// Estado anterior
     logic [3:0][3:0] numbers;          			// Entrada temporária de dígitos
     logic [3:0][3:0] magic_J1;         			// Número mágico de J1
     logic [3:0][3:0] magic_J2;         			// Número mágico de J2
-    logic [3:0][3:0] J1_guessed;       			// Tentativa de J1
-    logic [3:0][3:0] J2_guessed;       			// Tentativa de J2
     logic [2:0] reg_bull_count;        			// Contador de touros
     logic [2:0] reg_cow_count;         			// Contador de vacas
     logic guess_confirmed_reg;         			// Flag de jogada confirmada
@@ -68,16 +66,16 @@ module BullCow_Game (
 
     	// Verifica se os números são diferentes e estão entre 0 e 9
     always_comb begin
-        valid = (numbers[0] != numbers[1]) &&
-                (numbers[0] != numbers[2]) &&
-                (numbers[0] != numbers[3]) &&
-                (numbers[1] != numbers[2]) &&
-                (numbers[1] != numbers[3]) &&
-                (numbers[2] != numbers[3]) &&
-                (numbers[0] <= 4'd9) &&
-                (numbers[1] <= 4'd9) &&
-                (numbers[2] <= 4'd9) &&
-                (numbers[3] <= 4'd9);
+        valid = (SW[3:0]   != SW[7:4])   &&
+                (SW[3:0]   != SW[11:8])  &&
+                (SW[3:0]   != SW[15:12]) &&
+                (SW[7:4]   != SW[11:8])  &&
+                (SW[7:4]   != SW[15:12]) &&
+                (SW[11:8]  != SW[15:12]) &&
+                (SW[3:0]   <= 4'd9) &&
+                (SW[7:4]   <= 4'd9) &&
+                (SW[11:8]  <= 4'd9) &&
+                (SW[15:12] <= 4'd9);
     end
 
     	// Lógica sequencial da máquina de estados
@@ -88,8 +86,6 @@ module BullCow_Game (
                 numbers[i] <= 4'b0;
                 magic_J1[i] <= 4'b0;
                 magic_J2[i] <= 4'b0;
-                J1_guessed[i] <= 4'b0;
-                J2_guessed[i] <= 4'b0;
             end
             reg_cow_count  <= 3'b0;
             reg_bull_count <= 3'b0;
@@ -97,6 +93,7 @@ module BullCow_Game (
             J2_points <= 8'b0;
             guess_confirmed_reg <= 1'b0;
             prev_enter <= 1'b0;
+            prev_state <= J1_SETUP;
         end
         else if (enter == 1 && prev_enter == 0) begin
 			prev_state <= state;
@@ -137,9 +134,6 @@ module BullCow_Game (
 					reg_cow_count  <= 3'b0;
 					reg_bull_count <= 3'b0;
                     if (valid) begin
-                        for (int i = 0; i < 4; i++) begin
-                            J1_guessed[i] <= numbers[i];
-                        end
                         	// Conta os bulls
                         for (int i = 0; i < 4; i++) begin
                             if (numbers[i] == magic_J2[i]) begin
@@ -174,9 +168,6 @@ module BullCow_Game (
 					reg_cow_count  <= 3'b0;
 					reg_bull_count <= 3'b0;
                     if (valid) begin
-                        for (int i = 0; i < 4; i++) begin
-                            J2_guessed[i] <= numbers[i];
-                        end
                         	// Conta os bulls
                         for (int i = 0; i < 4; i++) begin
                             if (numbers[i] == magic_J1[i]) begin
