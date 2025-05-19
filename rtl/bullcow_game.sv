@@ -27,17 +27,20 @@ module BullCow_Game (
     input logic clock,
     input logic reset,
     input logic enter,
-    input logic [15:0] SW,              // Switches para entrada de dígitos
+    input logic [15:0] SW,                      // Switches para entrada de dígitos
 
-    output logic J1_guess_confirmed,    // Indica jogada confirmada do J1
-    output logic J2_guess_confirmed,    // Indica jogada confirmada do J2
-    output logic [2:0] J1_cow_count,    // Contagem de vacas do J1
-    output logic [2:0] J2_cow_count,    // Contagem de vacas do J2
-    output logic [2:0] J1_bull_count,   // Contagem de touros do J1
-    output logic [2:0] J2_bull_count,   // Contagem de touros do J2
-    output logic [2:0] game_state,      // Estado atual do jogo
-    output logic [7:0] J1_points,       // Pontos do J1
-    output logic [7:0] J2_points        // Pontos do J2
+    output logic J1_win,                        // Indica vitoria do J1
+    output logic J2_win,                        // Indica vitoria do J2
+    output logic J1_guess_confirmed,            // Indica jogada confirmada do J1
+    output logic J2_guess_confirmed,            // Indica jogada confirmada do J2
+    output logic [2:0] game_state,              // Estado atual do jogo
+    output logic [2:0] J1_cow_count,            // Contagem de vacas do J1
+    output logic [2:0] J2_cow_count,            // Contagem de vacas do J2
+    output logic [2:0] J1_bull_count,           // Contagem de touros do J1
+    output logic [2:0] J2_bull_count,           // Contagem de touros do J2
+    output logic [2:0] game_prev_state,         // Estado anterior do jogo
+    output logic [7:0] J1_points,               // Pontos do J1
+    output logic [7:0] J2_points                // Pontos do J2
 );
 
         // Definição dos estados
@@ -54,6 +57,8 @@ module BullCow_Game (
     state_t prev_state;                 // Estado anterior
     logic valid;                        // Indica entrada válida
     logic prev_enter;                   // Valor anterior do enter
+    logic reg_J1_win;                   // Flag p/ confirmação da vitoria do J1
+    logic reg_J2_win;                   // Flag p/ confirmação da vitoria do J2
     logic reg_J1_guess_confirmed;       // Flag p/ confirmação da tentativa do J1
     logic reg_J2_guess_confirmed;       // Flag p/ confirmação da tentativa do J2
     logic [2:0] reg_J1_cow_count;       // Contador de vacas do J1
@@ -73,11 +78,14 @@ module BullCow_Game (
     logic [2:0] J2_cow_count_comb;
 
         // Saídas
-    assign game_state = state;
-    assign J1_cow_count = reg_J1_cow_count;
-    assign J2_cow_count = reg_J2_cow_count;
-    assign J1_bull_count = reg_J1_bull_count;
-    assign J2_bull_count = reg_J2_bull_count;
+    assign game_state         = state;
+    assign game_prev_state    = prev_state;
+    assign J1_win             = reg_J1_win;
+    assign J2_win             = reg_J2_win;
+    assign J1_cow_count       = reg_J1_cow_count;
+    assign J2_cow_count       = reg_J2_cow_count;
+    assign J1_bull_count      = reg_J1_bull_count;
+    assign J2_bull_count      = reg_J2_bull_count;
     assign J1_guess_confirmed = reg_J1_guess_confirmed;
     assign J2_guess_confirmed = reg_J2_guess_confirmed;
 
@@ -98,10 +106,10 @@ module BullCow_Game (
         // Lógica combinacional para contagem de bulls e cows
     always_comb begin
             // Inicialização
+        J1_cow_count_comb  = 3'b0;
         J1_bull_count_comb = 3'b0;
-        J1_cow_count_comb = 3'b0;
+        J2_cow_count_comb  = 3'b0;
         J2_bull_count_comb = 3'b0;
-        J2_cow_count_comb = 3'b0;
         begin : J1_count
             J1_used = 4'b0000;
                 // Conta os bulls para J1
@@ -130,12 +138,12 @@ module BullCow_Game (
                     J2_bull_count_comb = J2_bull_count_comb + 1;
                 end
             end
-            // Conta os cows para J2
+                // Conta os cows para J2
             for (int i = 0; i < 4; i++) begin
                 if (SW[(3-i)*4 +: 4] != magic_J1[i]) begin
                     for (int j = 0; j < 4; j++) begin
-                        if ((SW[(3-i)*4 +: 4] == magic_J1[j]) && (i != j) && !J1_used[j]) begin
-                            J1_used[j]        = 1'b1;
+                        if ((SW[(3-i)*4 +: 4] == magic_J1[j]) && (i != j) && !J2_used[j]) begin
+                            J2_used[j]        = 1'b1;
                             J2_cow_count_comb = J2_cow_count_comb + 1; 
                         end
                     end
@@ -144,7 +152,7 @@ module BullCow_Game (
         end
     end
 
-    // Lógica sequencial da máquina de estados
+        // Lógica sequencial da máquina de estados
     always_ff @(posedge clock or posedge reset) begin
         if (reset) begin
             state <= J1_SETUP;
@@ -152,14 +160,16 @@ module BullCow_Game (
                 magic_J1[i] <= 4'b0;
                 magic_J2[i] <= 4'b0;
             end
-            J1_points <= 8'b0;
-            J2_points <= 8'b0;
-            prev_enter <= 1'b0;
-            prev_state <= J1_SETUP;
-            reg_J1_cow_count <= 3'b0;
-            reg_J2_cow_count <= 3'b0;
-            reg_J1_bull_count <= 3'b0;
-            reg_J2_bull_count <= 3'b0;
+            J1_points              <= 8'b0;
+            J2_points              <= 8'b0;
+            prev_enter             <= 1'b0;
+            prev_state             <= J1_SETUP;
+            reg_J1_win             <= 1'b0;
+            reg_J2_win             <= 1'b0;
+            reg_J1_cow_count       <= 3'b0;
+            reg_J2_cow_count       <= 3'b0;
+            reg_J1_bull_count      <= 3'b0;
+            reg_J2_bull_count      <= 3'b0;
             reg_J1_guess_confirmed <= 1'b0;
             reg_J2_guess_confirmed <= 1'b0;
         end
@@ -191,9 +201,11 @@ module BullCow_Game (
                         if (valid) begin
                             reg_J1_cow_count  <= J1_cow_count_comb;
                             reg_J1_bull_count <= J1_bull_count_comb;
-                            reg_J1_guess_confirmed <= 1'b1;
-                            if (reg_J1_bull_count == 4) begin
+                            if (J1_bull_count_comb == 4) begin
                                 state <= END_GAME;
+                            end
+                            else begin
+                                reg_J1_guess_confirmed <= 1'b1;
                             end
                         end
                     end
@@ -208,9 +220,11 @@ module BullCow_Game (
                         if (valid) begin
                             reg_J2_cow_count  <= J2_cow_count_comb;
                             reg_J2_bull_count <= J2_bull_count_comb;
-                            reg_J2_guess_confirmed <= 1'b1;
-                            if (reg_J2_bull_count == 4) begin
+                            if (J2_bull_count_comb == 4) begin
                                 state <= END_GAME;
+                            end
+                            else begin
+                                reg_J2_guess_confirmed <= 1'b1;
                             end
                         end
                     end
@@ -222,11 +236,26 @@ module BullCow_Game (
 
                 END_GAME: begin
                     if (prev_state == J1_GUESS) begin
-                        J1_points <= J1_points + 1;
-                    end else if (prev_state == J2_GUESS) begin
-                        J2_points <= J2_points + 1;
+                        J1_points  <= J1_points + 1;
+                        if (J1_points + 1 == 8) begin
+                            reg_J1_win <= 1'b1;
+                        end
+                    end 
+                    else if (prev_state == J2_GUESS) begin
+                        J2_points  <= J2_points + 1;
+                        if (J2_points + 1 == 8) begin
+                            reg_J2_win <= 1'b1;
+                        end
                     end
-                    state <= J1_SETUP;
+                    else begin
+                        if (reg_J1_win || reg_J2_win) begin
+                            J1_points <= 8'b0;
+                            J2_points <= 8'b0;
+                        end
+                        state      <= J1_SETUP;
+                        reg_J1_win <= 1'b0;
+                        reg_J2_win <= 1'b0;
+                    end
                 end
 
                 default: begin

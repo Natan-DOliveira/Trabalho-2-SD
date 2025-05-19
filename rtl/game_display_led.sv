@@ -1,8 +1,11 @@
 module Game_Display_LED
-#(parameter HALF_MS_COUNT = 50000)              // 1 kHz com clock de 100 MHz 
+#(parameter HALF_MS_COUNT = 50000,              // 1 kHz com clock de 100 MHz 
+  parameter HALF_SEC_COUTN = 50000000)          // 1 Hz com clock de 100 MHz 
 (
     input logic clock,
     input logic reset,
+    input logic J1_win,
+    input logic J2_win,
     input logic J1_guess_confirmed,
     input logic J2_guess_confirmed,
     input logic [2:0] game_state,
@@ -10,9 +13,9 @@ module Game_Display_LED
     input logic [2:0] J2_cow_count,
     input logic [2:0] J1_bull_count,
     input logic [2:0] J2_bull_count,
+    input logic [2:0] game_prev_state,
     input logic [7:0] J1_points,
     input logic [7:0] J2_points,
-    input logic [15:0] SW,
 
     output logic [7:0] AN,                      // Controle dos displays
     output logic [7:0] DDP,                     // Segmentos de a até dp
@@ -29,10 +32,12 @@ module Game_Display_LED
     } state_t;
 
         // Registradores
+    reg ck_1Hz;                                 // Clock de 1 Hz
     reg ck_1KHz;                                // Clock de 1 kHz
     reg [2:0]  dig_selection;                   // Seleciona o display atual (0 a 7)
     reg [4:0]  selected_dig;                    // Digito selecionado
-    reg [31:0] count_50k;                       // Contador para o 1 KHz
+    reg [31:0] count_50k;                       // Contador para 1 KHz
+    reg [31:0] count_50M;                       // Contador para 1 Hz
     // Entradas de dígitos
     reg [5:0] d1;
     reg [5:0] d2;
@@ -43,20 +48,31 @@ module Game_Display_LED
     reg [5:0] d7;
     reg [5:0] d8;
 
-
         // Geração do clock de 1 kHz
     always @(posedge clock or posedge reset) begin
         if (reset == 1'b1) begin
+            ck_1Hz    <= 1'b0;
             ck_1KHz   <= 1'b0;
             count_50k <= 32'd0;
+            count_50M <= 32'd0;
         end
         else begin
+                // Clock de 1 KHz
             if (count_50k == HALF_MS_COUNT - 1) begin
                 ck_1KHz   <= ~ck_1KHz;
                 count_50k <= 32'd0;
             end
             else begin
                 count_50k <= count_50k + 1;
+            end
+
+                // Clock de 1 Hz
+            if (count_50M == HALF_SEC_COUTN - 1) begin
+                ck_1Hz    <= ~ck_1Hz;
+                count_50M <= 32'd0;
+            end 
+            else begin
+                count_50M <= count_50M + 1;
             end
         end
     end
@@ -67,30 +83,47 @@ module Game_Display_LED
             LED = 16'b0;                        // Limpa os LEDs
         end
         else begin
-                // LED[7:0] J1
+                // LED[15:8] J1
             case (J1_points)
-                8'd0:    LED[7:0] = 8'b00000000;
-                8'd1:    LED[7:0] = 8'b10000000;
-                8'd2:    LED[7:0] = 8'b11000000;
-                8'd3:    LED[7:0] = 8'b11100000;
-                8'd4:    LED[7:0] = 8'b11110000;
-                8'd5:    LED[7:0] = 8'b11111000;
-                8'd6:    LED[7:0] = 8'b11111100;
-                8'd7:    LED[7:0] = 8'b11111110;
-                default: LED[7:0] = 8'b11111111;
-            endcase
-                // LED[15:8] J2
-            case (J2_points)
                 8'd0:    LED[15:8] = 8'b00000000;
-                8'd1:    LED[15:8] = 8'b00000001;
-                8'd2:    LED[15:8] = 8'b00000011;
-                8'd3:    LED[15:8] = 8'b00000111;
-                8'd4:    LED[15:8] = 8'b00001111;
-                8'd5:    LED[15:8] = 8'b00011111;
-                8'd6:    LED[15:8] = 8'b00111111;
-                8'd7:    LED[15:8] = 8'b01111111;
+                8'd1:    LED[15:8] = 8'b10000000;
+                8'd2:    LED[15:8] = 8'b11000000;
+                8'd3:    LED[15:8] = 8'b11100000;
+                8'd4:    LED[15:8] = 8'b11110000;
+                8'd5:    LED[15:8] = 8'b11111000;
+                8'd6:    LED[15:8] = 8'b11111100;
+                8'd7:    LED[15:8] = 8'b11111110;
                 default: LED[15:8] = 8'b11111111;
             endcase
+                // LED[7:0] J2
+            case (J2_points)
+                8'd0:    LED[7:0]  = 8'b00000000;
+                8'd1:    LED[7:0]  = 8'b00000001;
+                8'd2:    LED[7:0]  = 8'b00000011;
+                8'd3:    LED[7:0]  = 8'b00000111;
+                8'd4:    LED[7:0]  = 8'b00001111;
+                8'd5:    LED[7:0]  = 8'b00011111;
+                8'd6:    LED[7:0]  = 8'b00111111;
+                8'd7:    LED[7:0]  = 8'b01111111;
+                default: LED[7:0]  = 8'b11111111;
+            endcase
+
+            if (game_state == END_GAME) begin
+                if (J1_win) begin
+                    LED[15:8] = ck_1Hz ? 8'b11111111 : 8'b00000000;
+                end
+                if (J2_win) begin
+                    LED[7:0]  = ck_1Hz ? 8'b11111111 : 8'b00000000;
+                end
+                    // Se J1 foi o último a pontuar
+                if (game_prev_state == J1_GUESS && J1_points <= 7) begin
+                    LED[15 - J1_points] = ck_1Hz;
+                end
+                    // Se J2 foi o último a pontuar
+                else if (game_prev_state == J2_GUESS && J2_points <= 7) begin
+                    LED[J2_points]      = ck_1Hz;
+                end
+            end
         end
     end
 
@@ -108,7 +141,6 @@ module Game_Display_LED
 
         case (game_state) 
             J1_SETUP: begin
-                /*
                     // display -> "J1 SETUP"
                 d8 = {1'b1, 4'h6, 1'b1};        // J
                 d7 = {1'b1, 4'h1, 1'b1};        // 1
@@ -118,20 +150,9 @@ module Game_Display_LED
                 d3 = {1'b1, 4'hD, 1'b1};        // T
                 d2 = {1'b1, 4'hF, 1'b1};        // U
                 d1 = {1'b1, 4'h9, 1'b1};        // P
-                */
-                    // display -> "J1 XXYY" (XXYY são os 4 dígitos dos switches)
-                d8 = {1'b1, 4'h6, 1'b1};        // J
-                d7 = {1'b1, 4'h1, 1'b1};        // 1
-                d6 = 6'b0;                      // espaço
-                d5 = {1'b1, SW[15:12], 1'b0};   // Digito 1
-                d4 = {1'b1, SW[11:8], 1'b0};    // Digito 2
-                d3 = {1'b1, SW[7:4], 1'b0};     // Digito 3
-                d2 = {1'b1, SW[3:0], 1'b0};     // Digito 4
-                d1 = 6'b0;                      // espaço
             end
             
             J2_SETUP: begin
-                /*
                     // display -> "J2 SETUP"
                 d8 = {1'b1, 4'h6, 1'b0};        // J
                 d7 = {1'b1, 4'h2, 1'b0};        // 2
@@ -141,20 +162,10 @@ module Game_Display_LED
                 d3 = {1'b1, 4'hD, 1'b0};        // T
                 d2 = {1'b1, 4'hF, 1'b0};        // U
                 d1 = {1'b1, 4'h9, 1'b0};        // P
-                */
-                    // display -> "J2 XXYY" (XXYY são os 4 dígitos dos switches)
-                d8 = {1'b1, 4'h6, 1'b0};        // J
-                d7 = {1'b1, 4'h2, 1'b0};        // 2
-                d6 = 6'b0;                      // espaço
-                d5 = {1'b1, SW[15:12], 1'b0};   // Digito 1
-                d4 = {1'b1, SW[11:8], 1'b0};    // Digito 2
-                d3 = {1'b1, SW[7:4], 1'b0};     // Digito 3
-                d2 = {1'b1, SW[3:0], 1'b0};     // Digito 4
-                d1 = 6'b0;                      // espaço
             end
 
             J1_GUESS: begin
-                if (J1_guess_confirmed) begin
+                if (J1_guess_confirmed && J1_bull_count != 4) begin
                         // display -> "X TO Y VA" | X: número de bulls | Y: número de cows
                     d8 = {1'b1, (J1_bull_count > 4'd4 ? 4'd0 : J1_bull_count), 1'b1};// X
                     d7 = 6'b0;                                  // espaço
@@ -179,7 +190,7 @@ module Game_Display_LED
             end
 
             J2_GUESS: begin
-                if (J2_guess_confirmed) begin
+                if (J2_guess_confirmed && J2_bull_count != 4) begin
                         // display -> "X TO Y VA" | X: número de bulls | Y: número de cows
                     d8 = {1'b1, (J2_bull_count > 4'd4 ? 4'd0 : J2_bull_count), 1'b0};      // X
                     d7 = 6'b0;                                  // espaço
@@ -204,16 +215,39 @@ module Game_Display_LED
             end
 
             END_GAME: begin
-                    // display -> "BULLSEYE"
-                d8 = {1'b1, 4'hB, 1'b1};            // B
-                d7 = {1'b1, 4'hF, 1'b1};            // U
-                d6 = {1'b1, 4'h7, 1'b1};            // L
-                d5 = {1'b1, 4'h7, 1'b1};            // L
-                d4 = {1'b1, 4'hC, 1'b1};            // S
-                d3 = {1'b1, 4'hE, 1'b1};            // E
-                d2 = {1'b1, 4'h8, 1'b1};            // Y
-                d1 = {1'b1, 4'hE, 1'b1};            // E
+                if (J1_win) begin
+                    d8 = 6'b0;                      // espaço
+                    d7 = 6'b0;                      // espaço
+                    d6 = 6'b0;                      // espaço
+                    d5 = {1'b1, 4'h6, 1'b1};        // J
+                    d4 = {1'b1, 4'h1, 1'b1};        // 1
+                    d3 = 6'b0;                      // espaço
+                    d2 = 6'b0;                      // espaço
+                    d1 = 6'b0;                      // espaço
+                end
+                else if (J2_win) begin
+                    d8 = 6'b0;                      // espaço
+                    d7 = 6'b0;                      // espaço
+                    d6 = 6'b0;                      // espaço
+                    d5 = {1'b1, 4'h6, 1'b1};        // J
+                    d4 = {1'b1, 4'h2, 1'b1};        // 2
+                    d3 = 6'b0;                      // espaço
+                    d2 = 6'b0;                      // espaço
+                    d1 = 6'b0;                      // espaço
+                end
+                else begin
+                        // display -> "BULLSEYE"
+                    d8 = {1'b1, 4'hB, 1'b1};            // B
+                    d7 = {1'b1, 4'hF, 1'b1};            // U
+                    d6 = {1'b1, 4'h7, 1'b1};            // L
+                    d5 = {1'b1, 4'h7, 1'b1};            // L
+                    d4 = {1'b1, 4'hC, 1'b1};            // S
+                    d3 = {1'b1, 4'hE, 1'b1};            // E
+                    d2 = {1'b1, 4'h8, 1'b1};            // Y
+                    d1 = {1'b1, 4'hE, 1'b1};            // E
+                end
             end
+
             default: begin
                 d1 = 6'b0;
                 d2 = 6'b0;
