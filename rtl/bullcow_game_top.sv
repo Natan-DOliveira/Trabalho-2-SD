@@ -9,37 +9,48 @@ module BullCow_Game_Top (
     output logic [15:0] LED
 );
         // Sinais internos
-    logic guess_confirmed;
-    logic [2:0] cow_count;
-    logic [2:0] bull_count;
-	logic [2:0] game_state;
+    logic J1_guess_confirmed;
+    logic J2_guess_confirmed;
+    logic [2:0] game_state;
+	logic [2:0] J1_cow_count;
+    logic [2:0] J2_cow_count;      		
+    logic [2:0] J1_bull_count;     		
+    logic [2:0] J2_bull_count;     		
     logic [7:0] J1_points;
     logic [7:0] J2_points;
 
         // Instacia os módulos
     BullCow_Game game_logic (
+        .SW(SW),
         .clock(clock),
         .reset(reset),
         .enter(enter),
-        .SW(SW),
         .J1_points(J1_points),
         .J2_points(J2_points),
-        .cow_count(cow_count),
-        .bull_count(bull_count),
         .game_state(game_state),
-        .guess_confirmed(guess_confirmed)
+        .J1_cow_count(J1_cow_count),
+        .J2_cow_count(J2_cow_count),
+        .J1_bull_count(J1_bull_count),
+        .J2_bull_count(J2_bull_count),
+        .J1_guess_confirmed(J1_guess_confirmed),
+        .J2_guess_confirmed(J2_guess_confirmed)
     );
+    
     Game_Display_LED game_display (
-        .clock(clock),
-        .reset(reset),
+        .SW(SW),
         .AN(AN),
         .DDP(DDP),
         .LED(LED),
+        .clock(clock),
+        .reset(reset),
         .J1_points(J1_points),
         .J2_points(J2_points),
-        .cow_count(cow_count),
-        .bull_count(bull_count),
         .game_state(game_state),
-        .guess_confirmed(guess_confirmed)
+        .J1_cow_count(J1_cow_count),
+        .J2_cow_count(J2_cow_count),
+        .J1_bull_count(J1_bull_count),
+        .J2_bull_count(J2_bull_count),
+        .J1_guess_confirmed(J1_guess_confirmed),
+        .J2_guess_confirmed(J2_guess_confirmed)
     );
 endmodule

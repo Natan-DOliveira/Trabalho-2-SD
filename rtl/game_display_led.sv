@@ -3,12 +3,16 @@ module Game_Display_LED
 (
     input logic clock,
     input logic reset,
-    input logic guess_confirmed,
+    input logic J1_guess_confirmed,
+    input logic J2_guess_confirmed,
+    input logic [2:0] game_state,
+	input logic [2:0] J1_cow_count,
+    input logic [2:0] J2_cow_count,
+    input logic [2:0] J1_bull_count,
+    input logic [2:0] J2_bull_count,
     input logic [7:0] J1_points,
     input logic [7:0] J2_points,
-    input logic [2:0] bull_count,
-    input logic [2:0] cow_count,
-    input logic [2:0] game_state,
+    input logic [15:0] SW,
 
     output logic [7:0] AN,                      // Controle dos displays
     output logic [7:0] DDP,                     // Segmentos de a até dp
@@ -57,7 +61,7 @@ module Game_Display_LED
         end
     end
 
-        // Lógica combinacional para os LEDs
+        // Geração dos dígitos d1 até d8 pelo estado atual do jogo
     always_comb begin
         if (reset) begin
             LED = 16'b0;                        // Limpa os LEDs
@@ -78,13 +82,13 @@ module Game_Display_LED
                 // LED[15:8] J2
             case (J2_points)
                 8'd0:    LED[15:8] = 8'b00000000;
-                8'd1:    LED[15:8] = 8'b10000000;
-                8'd2:    LED[15:8] = 8'b11000000;
-                8'd3:    LED[15:8] = 8'b11100000;
-                8'd4:    LED[15:8] = 8'b11110000;
-                8'd5:    LED[15:8] = 8'b11111000;
-                8'd6:    LED[15:8] = 8'b11111100;
-                8'd7:    LED[15:8] = 8'b11111110;
+                8'd1:    LED[15:8] = 8'b00000001;
+                8'd2:    LED[15:8] = 8'b00000011;
+                8'd3:    LED[15:8] = 8'b00000111;
+                8'd4:    LED[15:8] = 8'b00001111;
+                8'd5:    LED[15:8] = 8'b00011111;
+                8'd6:    LED[15:8] = 8'b00111111;
+                8'd7:    LED[15:8] = 8'b01111111;
                 default: LED[15:8] = 8'b11111111;
             endcase
         end
@@ -104,6 +108,7 @@ module Game_Display_LED
 
         case (game_state) 
             J1_SETUP: begin
+                /*
                     // display -> "J1 SETUP"
                 d8 = {1'b1, 4'h6, 1'b1};        // J
                 d7 = {1'b1, 4'h1, 1'b1};        // 1
@@ -113,9 +118,20 @@ module Game_Display_LED
                 d3 = {1'b1, 4'hD, 1'b1};        // T
                 d2 = {1'b1, 4'hF, 1'b1};        // U
                 d1 = {1'b1, 4'h9, 1'b1};        // P
+                */
+                    // display -> "J1 XXYY" (XXYY são os 4 dígitos dos switches)
+                d8 = {1'b1, 4'h6, 1'b1};        // J
+                d7 = {1'b1, 4'h1, 1'b1};        // 1
+                d6 = 6'b0;                      // espaço
+                d5 = {1'b1, SW[15:12], 1'b0};   // Digito 1
+                d4 = {1'b1, SW[11:8], 1'b0};    // Digito 2
+                d3 = {1'b1, SW[7:4], 1'b0};     // Digito 3
+                d2 = {1'b1, SW[3:0], 1'b0};     // Digito 4
+                d1 = 6'b0;                      // espaço
             end
             
             J2_SETUP: begin
+                /*
                     // display -> "J2 SETUP"
                 d8 = {1'b1, 4'h6, 1'b0};        // J
                 d7 = {1'b1, 4'h2, 1'b0};        // 2
@@ -125,17 +141,27 @@ module Game_Display_LED
                 d3 = {1'b1, 4'hD, 1'b0};        // T
                 d2 = {1'b1, 4'hF, 1'b0};        // U
                 d1 = {1'b1, 4'h9, 1'b0};        // P
+                */
+                    // display -> "J2 XXYY" (XXYY são os 4 dígitos dos switches)
+                d8 = {1'b1, 4'h6, 1'b0};        // J
+                d7 = {1'b1, 4'h2, 1'b0};        // 2
+                d6 = 6'b0;                      // espaço
+                d5 = {1'b1, SW[15:12], 1'b0};   // Digito 1
+                d4 = {1'b1, SW[11:8], 1'b0};    // Digito 2
+                d3 = {1'b1, SW[7:4], 1'b0};     // Digito 3
+                d2 = {1'b1, SW[3:0], 1'b0};     // Digito 4
+                d1 = 6'b0;                      // espaço
             end
 
             J1_GUESS: begin
-                if (guess_confirmed) begin
+                if (J1_guess_confirmed) begin
                         // display -> "X TO Y VA" | X: número de bulls | Y: número de cows
-                    d8 = {1'b1, (bull_count > 4'd4 ? 4'd0 : bull_count), 1'b1};   // X
+                    d8 = {1'b1, (J1_bull_count > 4'd4 ? 4'd0 : J1_bull_count), 1'b1};// X
                     d7 = 6'b0;                                  // espaço
                     d6 = {1'b1, 4'hD, 1'b1};                    // T
                     d5 = {1'b1, 4'h0, 1'b1};                    // O
                     d4 = 6'b0;                                  // espaço
-                    d3 = {1'b1, (cow_count > 4'd4 ? 4'd0 : cow_count), 1'b1};    // Y
+                    d3 = {1'b1, (J1_cow_count > 4'd4 ? 4'd0 : J1_cow_count), 1'b1};// Y
                     d2 = {1'b1, 4'hF, 1'b1};                    // V
                     d1 = {1'b1, 4'hA, 1'b1};                    // A
                 end
@@ -153,14 +179,14 @@ module Game_Display_LED
             end
 
             J2_GUESS: begin
-                if (guess_confirmed) begin
+                if (J2_guess_confirmed) begin
                         // display -> "X TO Y VA" | X: número de bulls | Y: número de cows
-                    d8 = {1'b1, (bull_count > 4'd4 ? 4'd0 : bull_count), 1'b0};   // X
+                    d8 = {1'b1, (J2_bull_count > 4'd4 ? 4'd0 : J2_bull_count), 1'b0};      // X
                     d7 = 6'b0;                                  // espaço
                     d6 = {1'b1, 4'hD, 1'b0};                    // T
                     d5 = {1'b1, 4'h0, 1'b0};                    // O
                     d4 = 6'b0;                                  // espaço
-                    d3 = {1'b1, (cow_count > 4'd4 ? 4'd0 : cow_count), 1'b0};    // Y
+                    d3 = {1'b1, (J2_cow_count > 4'd4 ? 4'd0 : J2_cow_count), 1'b0};       // Y
                     d2 = {1'b1, 4'hF, 1'b0};                    // V
                     d1 = {1'b1, 4'hA, 1'b0};                    // A
                 end
@@ -178,17 +204,15 @@ module Game_Display_LED
             end
 
             END_GAME: begin
-                if (bull_count == 4) begin
-                        // display -> "BULLSEYE"
-                    d8 = {1'b1, 4'hB, 1'b1};        // B
-                    d7 = {1'b1, 4'hF, 1'b1};        // U
-                    d6 = {1'b1, 4'h7, 1'b1};        // L
-                    d5 = {1'b1, 4'h7, 1'b1};        // L
-                    d4 = {1'b1, 4'hC, 1'b1};        // S
-                    d3 = {1'b1, 4'hE, 1'b1};        // E
-                    d2 = {1'b1, 4'h8, 1'b1};        // Y
-                    d1 = {1'b1, 4'hE, 1'b1};        // E
-                end
+                    // display -> "BULLSEYE"
+                d8 = {1'b1, 4'hB, 1'b1};            // B
+                d7 = {1'b1, 4'hF, 1'b1};            // U
+                d6 = {1'b1, 4'h7, 1'b1};            // L
+                d5 = {1'b1, 4'h7, 1'b1};            // L
+                d4 = {1'b1, 4'hC, 1'b1};            // S
+                d3 = {1'b1, 4'hE, 1'b1};            // E
+                d2 = {1'b1, 4'h8, 1'b1};            // Y
+                d1 = {1'b1, 4'hE, 1'b1};            // E
             end
             default: begin
                 d1 = 6'b0;
