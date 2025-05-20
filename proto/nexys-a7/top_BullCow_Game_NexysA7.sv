@@ -1,4 +1,5 @@
-module BullCow_Game_Top (
+// device: xc7a100tcsg324-1
+module top_BullCow_Game_NexysA7 (
     input logic clock,
     input logic reset,
     input logic enter,
@@ -43,7 +44,6 @@ module BullCow_Game_Top (
     );
     
     Game_Display_LED game_display (
-        .SW(SW),
         .AN(AN),
         .DDP(DDP),
         .LED(LED),
